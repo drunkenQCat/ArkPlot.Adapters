@@ -24,6 +24,7 @@ public class ArknightsScriptParser : IScriptParser
         preloader.ParseAndCollectAssets();
 
         return lines.Cast<ScriptLine>().ToList();
+
     }
 
     public HashSet<ResourceRef> CollectResources(List<ScriptLine> lines)
@@ -57,7 +58,7 @@ public class ArknightsScriptParser : IScriptParser
 
     private static PrtsPreloader CreatePreloader(List<FormattedTextEntry> lines, string chapterTitle)
     {
-        var plot = new Plot { Title = chapterTitle, TextVariants = lines };
+        var plot = new Plot { Title = chapterTitle, TextVariants = lines.Cast<ScriptLine>().ToList() };
         var plotManager = new PlotManager(plot);
         return new PrtsPreloader(plotManager);
     }

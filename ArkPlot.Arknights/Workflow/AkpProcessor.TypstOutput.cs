@@ -17,7 +17,7 @@ public abstract partial class AkpProcessor
         foreach (var plot in plotList)
         {
             var header = "#import \"./template.typ\": arknights_sim, arknights_sim_2p\n";
-            var content = string.Join("\n", plot.CurrentPlot.TextVariants.Select(x => x.TypText));
+            var content = string.Join("\n", plot.CurrentPlot.TextVariants.OfType<FormattedTextEntry>().Select(x => x.TypText));
             var result = header + content;
             var currentTyp = Path.Join(outputPath, $"{fileIndex}_{plot.CurrentPlot.Title}.typ");
             File.WriteAllText(currentTyp, result);

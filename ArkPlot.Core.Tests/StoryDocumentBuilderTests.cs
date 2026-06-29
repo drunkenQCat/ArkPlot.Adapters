@@ -7,9 +7,9 @@ namespace ArkPlot.Core.Tests;
 [Collection("DbTests")]
 public class StoryDocumentBuilderTests
 {
-    private static FormattedTextEntry MakeDialog(string name, string dialog, int index = 0)
+    private static ScriptLine MakeDialog(string name, string dialog, int index = 0)
     {
-        return new FormattedTextEntry
+        return new ScriptLine
         {
             Index = index,
             MdText = $"**{name}** {dialog}",
@@ -20,9 +20,9 @@ public class StoryDocumentBuilderTests
         };
     }
 
-    private static FormattedTextEntry MakeBg(string url, int index = 0)
+    private static ScriptLine MakeBg(string url, int index = 0)
     {
-        return new FormattedTextEntry
+        return new ScriptLine
         {
             Index = index,
             MdText = $"![bg]({url})",
@@ -34,14 +34,14 @@ public class StoryDocumentBuilderTests
     [Fact]
     public void Builder_EmptyEntries_ReturnsEmptyResult()
     {
-        var builder = new StoryDocumentBuilder(new List<FormattedTextEntry>());
+        var builder = new StoryDocumentBuilder(new List<ScriptLine>());
         Assert.True(string.IsNullOrWhiteSpace(builder.Result));
     }
 
     [Fact]
     public void Builder_DialogEntries_ProducesOutput()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeDialog("阿米娅", "博士，我们出发吧。", 0),
             MakeDialog("博士", "好的。", 1),
@@ -57,7 +57,7 @@ public class StoryDocumentBuilderTests
     [Fact]
     public void Builder_RemovesEmptyEntries()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeDialog("A", "有内容", 0),
             new() { Index = 1, MdText = "", Type = "empty", OriginalText = "" },
@@ -71,7 +71,7 @@ public class StoryDocumentBuilderTests
     [Fact]
     public void Builder_NormalizesStageDirections()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             new() { Index = 0, MdText = "`瞳孔地震`", Type = "dialog", OriginalText = "test" },
         };
@@ -84,7 +84,7 @@ public class StoryDocumentBuilderTests
     [Fact]
     public void Builder_NormalizesImagePan()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             new() { Index = 0, MdText = "`图像平移`", Type = "dialog", OriginalText = "test" },
         };
@@ -96,7 +96,7 @@ public class StoryDocumentBuilderTests
     [Fact]
     public void Builder_ReadableMode_UsesReadableRenderer()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeDialog("角色", "对话内容", 0),
         };
@@ -108,7 +108,7 @@ public class StoryDocumentBuilderTests
     [Fact]
     public void Builder_PromptMode_UsesPromptRenderer()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeDialog("角色", "对话内容", 0),
         };
@@ -120,7 +120,7 @@ public class StoryDocumentBuilderTests
     [Fact]
     public void Builder_WithSeparator_SplitsGroups()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeDialog("A", "第一段", 0),
             new() { Index = 1, MdText = "---", Type = "separator", OriginalText = "[delay]" },
@@ -137,7 +137,7 @@ public class StoryDocumentBuilderTests
     [Fact]
     public void Builder_AppendResultToBuilder_AppendsToStringBuilder()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeDialog("X", "append测试", 0),
         };
@@ -155,7 +155,7 @@ public class StoryDocumentBuilderTests
     [Fact]
     public void Builder_WithPicDesc_EnablesDescriptions()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeDialog("角色", "对话", 0),
         };
@@ -168,7 +168,7 @@ public class StoryDocumentBuilderTests
     [Fact]
     public void Builder_DisableDescriptions()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeDialog("角色", "对话", 0),
         };

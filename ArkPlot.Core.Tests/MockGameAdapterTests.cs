@@ -108,7 +108,7 @@ public class MockGameAdapterTests : IDisposable
         ITagRenderer renderer = new MockTagRenderer();
         Assert.False(renderer.RequiresRulesFile);
 
-        var line = new FormattedTextEntry { OriginalText = "hello" };
+        var line = new ScriptLine { OriginalText = "hello" };
         var result = renderer.RenderLine(line);
         Assert.Equal("hello", result);
     }
@@ -168,7 +168,7 @@ internal class MockScriptParser : IScriptParser
         {
             var part = parts[i].TrimEnd('\r');
             var colonIdx = part.IndexOf(':');
-            var entry = new FormattedTextEntry { Index = i, OriginalText = part };
+            var entry = new ScriptLine { Index = i, OriginalText = part };
 
             if (colonIdx > 0)
             {
@@ -198,8 +198,8 @@ internal class MockTagRenderer : ITagRenderer
 
     public string RenderLine(ScriptLine line)
     {
-        if (line is FormattedTextEntry entry && !string.IsNullOrEmpty(entry.CharacterName))
-            return $"**{entry.CharacterName}** {entry.Dialog}";
+        if (!string.IsNullOrEmpty(line.CharacterName))
+            return $"**{line.CharacterName}** {line.Dialog}";
 
         return line.OriginalText;
     }

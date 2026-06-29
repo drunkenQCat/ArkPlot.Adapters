@@ -44,7 +44,7 @@ public class PlotManager
             textVariants.Add(entry);
             index++;
         }
-        CurrentPlot.TextVariants = textVariants;
+        CurrentPlot.TextVariants = textVariants.Cast<ScriptLine>().ToList();
     }
 
     public async Task StartParseLines(AkpParser akpParser)
@@ -61,7 +61,7 @@ public class PlotManager
         }
 
         int pngIndex = 1;
-        foreach (var entry in CurrentPlot.TextVariants)
+        foreach (var entry in CurrentPlot.TextVariants.OfType<FormattedTextEntry>())
         {
             entry.MdText = ConvertToMarkdown(entry);
             entry.TypText = ConvertToTypstCode(entry);
@@ -76,7 +76,7 @@ public class PlotManager
         if (CurrentPlot.ActId != 0 &&
             CurrentPlot.TextVariants.Any(e => !string.IsNullOrWhiteSpace(e.OriginalText)))
         {
-            await PlotCache.SaveAsync(CurrentPlot, CurrentPlot.TextVariants);
+            await PlotCache<FormattedTextEntry>.SaveAsync(CurrentPlot, CurrentPlot.TextVariants.Cast<FormattedTextEntry>().ToList());
         }
     }
     private string ConvertToMarkdown(FormattedTextEntry line)

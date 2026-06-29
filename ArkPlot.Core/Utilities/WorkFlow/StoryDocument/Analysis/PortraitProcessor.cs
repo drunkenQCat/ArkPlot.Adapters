@@ -1,6 +1,6 @@
 using ArkPlot.Core.Model;
 using CharacterChart = System.Collections.Generic.Dictionary<string, string>;
-using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.FormattedTextEntry>;
+using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.ScriptLine>;
 
 namespace ArkPlot.Core.Utilities.WorkFlow.StoryDocument;
 
@@ -63,7 +63,7 @@ public static class PortraitProcessor
         return characters;
     }
 
-    private static string ExtractCharacterNameFromLines(EntryList lineList, FormattedTextEntry line)
+    private static string ExtractCharacterNameFromLines(EntryList lineList, ScriptLine line)
     {
         var nameEntry = lineList.ElementAtOrDefault(line.Index + 1);
         return nameEntry is not null && !string.IsNullOrEmpty(nameEntry.CharacterName)
@@ -71,7 +71,7 @@ public static class PortraitProcessor
             : "";
     }
 
-    public static bool IsPortrait(FormattedTextEntry item)
+    public static bool IsPortrait(ScriptLine item)
     {
         return item.Type.Contains("Char") || item.Type.Contains("char");
     }
@@ -99,7 +99,7 @@ public static class PortraitProcessor
         return $"<div class=\"crop\">{htmlTag.ReconstructHtml()}</div>";
     }
 
-    private static string GetPortraitUrl(FormattedTextEntry entry)
+    private static string GetPortraitUrl(ScriptLine entry)
     {
         _ = entry.CommandSet.TryGetValue("focus", out string? focusIndex);
         if (int.TryParse(focusIndex, out var focusIdx))

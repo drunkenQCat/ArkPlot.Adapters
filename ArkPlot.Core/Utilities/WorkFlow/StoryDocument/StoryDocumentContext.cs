@@ -1,6 +1,6 @@
 using ArkPlot.Core.Model;
-using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.FormattedTextEntry>;
-using EntryGroups = System.Collections.Generic.List<System.Collections.Generic.List<ArkPlot.Core.Model.FormattedTextEntry>>;
+using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.ScriptLine>;
+using EntryGroups = System.Collections.Generic.List<System.Collections.Generic.List<ArkPlot.Core.Model.ScriptLine>>;
 
 namespace ArkPlot.Core.Utilities.WorkFlow.StoryDocument;
 
@@ -26,4 +26,4 @@ public class StoryDocumentContext
 
 public record PortraitGrp(EntryList SList, List<CharacterInfo> PortraitMarks);
 
-public record CharacterInfo(FormattedTextEntry OriginalEntry, string Name, string PortraitHtml);
+public record CharacterInfo(ScriptLine OriginalEntry, string Name, string PortraitHtml);

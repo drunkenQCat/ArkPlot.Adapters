@@ -1,6 +1,6 @@
 using System.IO;
 using ArkPlot.Core.Model;
-using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.FormattedTextEntry>;
+using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.ScriptLine>;
 
 namespace ArkPlot.Core.Utilities.WorkFlow.StoryDocument;
 
@@ -44,7 +44,7 @@ internal class PromptRenderer : IMdRenderer
         return mdList;
     }
 
-    private static string NormalizeText(FormattedTextEntry entry)
+    private static string NormalizeText(ScriptLine entry)
     {
         var mdText = entry.MdText;
 
@@ -64,7 +64,7 @@ internal class PromptRenderer : IMdRenderer
         return mdText;
     }
 
-    private void EmitCharacterFacts(FormattedTextEntry entry, List<string> mdList)
+    private void EmitCharacterFacts(ScriptLine entry, List<string> mdList)
     {
         if (string.IsNullOrEmpty(entry.CharacterName)
             || string.IsNullOrEmpty(entry.CharacterCode)
@@ -79,17 +79,17 @@ internal class PromptRenderer : IMdRenderer
         }
     }
 
-    private void EmitSceneFacts(FormattedTextEntry entry, List<string> mdList)
+    private void EmitSceneFacts(ScriptLine entry, List<string> mdList)
     {
         if (!_config.BackgroundTypes.Contains(entry.Type) || string.IsNullOrEmpty(entry.PicFacts))
             return;
 
-        var bgName = Path.GetFileNameWithoutExtension(entry.Bg);
+        var bgName = "";
         mdList.Add(
             $"<aside class=\"{_config.SceneFactsClass}\" data-bg=\"{bgName}\">\n{entry.PicFacts}\n</aside>");
     }
 
-    private void EmitItemFacts(FormattedTextEntry entry, List<string> mdList)
+    private void EmitItemFacts(ScriptLine entry, List<string> mdList)
     {
         if (_config.ItemTypes.Contains(entry.Type) && !string.IsNullOrEmpty(entry.PicFacts))
         {

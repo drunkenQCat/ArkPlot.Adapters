@@ -44,12 +44,9 @@ public static class DbFactory
             typeof(Act),
             typeof(StoryChapter),
             typeof(Plot),
-            typeof(FormattedTextEntry),
+            typeof(ScriptLine),
             typeof(SyncState),
-            typeof(PicDescription),
-            typeof(PrtsData),
-            typeof(PrtsResource),
-            typeof(PrtsPortraitLink)
+            typeof(PicDescription)
         );
 
         // 建唯一索引（仅约束 StoryChapterId > 0 的记录，避免与旧数据 StoryChapterId=0 冲突）

@@ -10,42 +10,42 @@ public class PortraitProcessorTests
     [Fact]
     public void IsPortrait_CharType_ReturnsTrue()
     {
-        var entry = new FormattedTextEntry { Type = "character" };
+        var entry = new ScriptLine { Type = "character" };
         Assert.True(PortraitProcessor.IsPortrait(entry));
     }
 
     [Fact]
     public void IsPortrait_CharslotType_ReturnsTrue()
     {
-        var entry = new FormattedTextEntry { Type = "charslot" };
+        var entry = new ScriptLine { Type = "charslot" };
         Assert.True(PortraitProcessor.IsPortrait(entry));
     }
 
     [Fact]
     public void IsPortrait_CharactercutinType_ReturnsTrue()
     {
-        var entry = new FormattedTextEntry { Type = "charactercutin" };
+        var entry = new ScriptLine { Type = "charactercutin" };
         Assert.True(PortraitProcessor.IsPortrait(entry));
     }
 
     [Fact]
     public void IsPortrait_DialogType_ReturnsFalse()
     {
-        var entry = new FormattedTextEntry { Type = "dialog" };
+        var entry = new ScriptLine { Type = "dialog" };
         Assert.False(PortraitProcessor.IsPortrait(entry));
     }
 
     [Fact]
     public void IsPortrait_BackgroundType_ReturnsFalse()
     {
-        var entry = new FormattedTextEntry { Type = "background" };
+        var entry = new ScriptLine { Type = "background" };
         Assert.False(PortraitProcessor.IsPortrait(entry));
     }
 
     [Fact]
     public void DetectPortraits_NoPortraits_EmptyList()
     {
-        var lines = new List<FormattedTextEntry>
+        var lines = new List<ScriptLine>
         {
             new() { Index = 0, Type = "dialog", MdText = "hello" },
         };
@@ -59,7 +59,7 @@ public class PortraitProcessorTests
     [Fact]
     public void DetectPortraits_WithPortrait_Detects()
     {
-        var lines = new List<FormattedTextEntry>
+        var lines = new List<ScriptLine>
         {
             new() { Index = 0, Type = "charslot", MdText = "<img src=\"portrait.png\">", CharacterName = "阿米娅" },
             new() { Index = 1, Type = "dialog", MdText = "**阿米娅** 你好", CharacterName = "阿米娅" },
@@ -74,7 +74,7 @@ public class PortraitProcessorTests
     [Fact]
     public void RemovePortraitLines_ClearsMdText()
     {
-        var lines = new List<FormattedTextEntry>
+        var lines = new List<ScriptLine>
         {
             new() { Index = 0, Type = "dialog", MdText = "keep" },
             new() { Index = 1, Type = "charslot", MdText = "remove" },
@@ -95,21 +95,21 @@ public class StoryDocumentContextTests
     [Fact]
     public void Constructor_DefaultEnablesDescriptions()
     {
-        var ctx = new StoryDocumentContext(new List<FormattedTextEntry>());
+        var ctx = new StoryDocumentContext(new List<ScriptLine>());
         Assert.True(ctx.EnableDescriptions);
     }
 
     [Fact]
     public void Constructor_DisableDescriptions()
     {
-        var ctx = new StoryDocumentContext(new List<FormattedTextEntry>(), enableDescriptions: false);
+        var ctx = new StoryDocumentContext(new List<ScriptLine>(), enableDescriptions: false);
         Assert.False(ctx.EnableDescriptions);
     }
 
     [Fact]
     public void Constructor_InitializesEmptyCollections()
     {
-        var ctx = new StoryDocumentContext(new List<FormattedTextEntry>());
+        var ctx = new StoryDocumentContext(new List<ScriptLine>());
         Assert.Empty(ctx.Groups);
         Assert.Empty(ctx.Portraits);
         Assert.Empty(ctx.PortraitIndexes);

@@ -20,7 +20,7 @@ public partial class PrtsPreloader
     // ──── 依赖 ────
     private readonly string _pageName;
     private readonly PrtsDataProcessor _prts = new();
-    private readonly List<FormattedTextEntry> _textList;
+    private readonly List<ScriptLine> _textList;
 
     // ──── 解析状态 ────
     private int _counter;
@@ -50,7 +50,7 @@ public partial class PrtsPreloader
 
     public void ParseAndCollectAssets()
     {
-        foreach (var entry in _textList)
+        foreach (var entry in _textList.OfType<FormattedTextEntry>())
             ParseOriginalText(entry);
     }
 

@@ -3,9 +3,9 @@ using ArkPlot.Core.Infrastructure;
 using ArkPlot.Core.Model;
 using ArkPlot.Core.Services;
 using ArkPlot.Core.Utilities.WorkFlow;
-using Xunit;
-
+using ArkPlot.Arknights;
 using ArkPlot.Arknights.Adapters;
+using Xunit;
 namespace ArkPlot.Arknights.Tests;
 
 [Collection("DbTests")]

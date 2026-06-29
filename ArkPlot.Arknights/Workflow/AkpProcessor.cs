@@ -46,14 +46,14 @@ public abstract partial class AkpProcessor
     /// 传播 CharacterCode：从 charslot/character 条目传播到后续同名对话条目，
     /// 并将 PicFacts 复制给对话条目。
     /// </summary>
-    private static void PropagateCharacterCodeAndFacts(IList<FormattedTextEntry> entries)
+    private static void PropagateCharacterCodeAndFacts(IList<ScriptLine> entries)
     {
         var nameToCode = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var codeToFacts = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         string? pendingCode = null;
         string? pendingFacts = null;
 
-        foreach (var entry in entries)
+        foreach (var entry in entries.OfType<FormattedTextEntry>())
         {
             if (entry.Type is "character" or "charactercutin" or "charslot"
                 && !string.IsNullOrEmpty(entry.CharacterCode))

@@ -76,12 +76,10 @@ public class StoryPipeline
     /// <summary>将 ScriptLine 列表转换为 Markdown 文档。</summary>
     public static string BuildDocument(List<ScriptLine> lines, OutputMode mode)
     {
-        // 将 ScriptLine 转为 FormattedTextEntry 以兼容现有 StoryDocumentBuilder
-        var entries = lines.OfType<FormattedTextEntry>().ToList();
-        if (entries.Count == 0)
+        if (lines.Count == 0)
             return string.Empty;
 
-        var builder = new StoryDocumentBuilder(entries, outputMode: mode);
+        var builder = new StoryDocumentBuilder(lines, outputMode: mode);
         return builder.Result;
     }
 
@@ -95,9 +93,8 @@ public class StoryPipeline
 
     private async Task EnrichDescriptionsAsync(List<ScriptLine> lines, CancellationToken ct)
     {
-        var entries = lines.OfType<FormattedTextEntry>().ToList();
-        if (entries.Count == 0) return;
+        if (lines.Count == 0) return;
 
-        await PicDescEnricher.EnrichAsync(entries, _picDescService, ct);
+        await PicDescEnricher.EnrichAsync(lines, _picDescService, ct);
     }
 }

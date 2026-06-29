@@ -10,7 +10,7 @@ namespace ArkPlot.Core.Utilities.WorkFlow.StoryDocument;
 /// </summary>
 public static class PicDescEnricher
 {
-    public static async Task EnrichAsync(IList<FormattedTextEntry> entries, PicDescService picDescService, CancellationToken ct = default)
+    public static async Task EnrichAsync(IList<ScriptLine> entries, PicDescService picDescService, CancellationToken ct = default)
     {
         foreach (var entry in entries)
         {
@@ -23,9 +23,8 @@ public static class PicDescEnricher
             List<string> urlsToDescribe;
             if (isPortraitType && entry.ResourceUrls.Count > 0)
             {
-                var resourceIndex = entry.Type == "charslot"
-                    ? 0
-                    : (entry.PortraitFocus > 0 ? entry.PortraitFocus - 1 : 0);
+                // PortraitFocus and Portraits are Arknights-specific, removed for Core
+                var resourceIndex = 0;
                 if (resourceIndex >= entry.ResourceUrls.Count)
                     resourceIndex = 0;
 
@@ -33,7 +32,7 @@ public static class PicDescEnricher
                 urlsToDescribe = new List<string> { focusUrl };
                 foreach (var url in entry.ResourceUrls)
                 {
-                    if (url != focusUrl && !entry.Portraits.Contains(url))
+                    if (url != focusUrl)
                         urlsToDescribe.Add(url);
                 }
             }

@@ -330,22 +330,108 @@ public static async Task SaveAsync(Plot plot, ..., PlotStatus status = PlotStatu
 | `CS0246: Type 'X' not found` | 缺少 `using System.Text` 等 | 补充标准库 using |
 | 编译通过但运行时类型不匹配 | 源文件仍在两个项目中同时编译 | 用 `<Exclude>` 排除，确保只编译一次 |
 
-### 阶段 4 — 验证多游戏适配
+## 第三步彩蛋：文档渲染器不需 tag.json
 
-1. 用 mock 游戏实现一套适配器（放在 Core.Tests 项目内）
-2. `StoryPipeline` 跑通端到端
+**经验总结**：`tag.json` 是方舟文本标签（`[name="xxx"]`）的妥协方案。如果游戏数据已经是结构化的（JSON/YAML），不需要正则查表，只需要模板拼接。
 
 ```csharp
-// Mock 游戏端到端验证（Core.Tests）
+/// 简单标签渲染器：面向结构化数据的游戏，不需要 tag.json。
+public class SimpleTagRenderer : ITagRenderer
+{
+    public bool RequiresRulesFile => false;
+
+    /// 对话行模板。默认：**角色名** 对话内容
+    public string DialogTemplate { get; set; } = "**{speaker}** {text}";
+    /// 旁白行模板。默认：原文
+    public string NarrationTemplate { get; set; } = "{text}";
+
+    public void LoadRules(string rulesFilePath) { } // 空实现
+
+    public string RenderLine(ScriptLine line) { ... }
+}
+```
+
+这也意味着 `ITagRenderer` 的 `RenderLine` 方法应该**足够通用**，适配器可以自由选择查 JSON 规则文件、模板拼接、甚至不做任何转换。
+
+## 第三步入门：Type 名称映射（隐藏最大的坑）
+
+重构后发现最严重的问题不是状态管理，而是 **Core 层的组件直接引用了游戏特有的 Type 名称**。
+
+### 问题
+
+`StoryDocumentBuilder`, `SegmentGrouper`, `PromptRenderer`, `PortraitProcessor` 多处硬编码方舟类型名：
+
+```csharp
+if (entry.Type is "character" or "charslot" or "charactercutin")      // PortraitProcessor
+if (entry.Type is "background" or "largebg")                           // PromptRenderer
+if (entry.Type is "showitem" or "cgitem" or "interlude" or "image")   // PromptRenderer
+if (entry.Type == "playmusic")                                          // SegmentGrouper
+```
+
+这些都在 Core 层，但它们全是方舟逻辑。
+
+### 解决方案：集中式类型映射（B 方案）
+
+不要在解析时零散映射（A 方案，**不推荐**），而是在 **管线入口集中映射**：
+
+```
+原始类型名（方舟: "charslot", 假设AVG: "char_show"）
+       ↓
+    管线入口：TypeMap(rawType) → 通用类型名
+       ↓
+    下游组件统一看通用名（"portrait", "dialog", "background", "audio", "narration"）
+```
+
+**谁来做**：每个适配器提供一个映射表，`StoryPipeline` 在 `Parse()` 输出后统一应用：
+
+```csharp
+public interface IScriptParser
+{
+    IReadOnlyDictionary<string, string> TypeMappings { get; }  // rawType → genericType
+}
+```
+
+**定义一套通用类型集**供所有适配器对齐：
+
+| 通用类型 | 对应语义 |
+|---------|---------|
+| `dialog` | 有说话人的对话 |
+| `narration` | 无说话人的旁白 |
+| `portrait` | 立绘/角色显示 |
+| `background` | 背景切换 |
+| `audio` | 音乐/音效 |
+| `effect` | 特效/滤镜 |
+| `separator` | 分段标记 |
+
+Type 映射应在 `SegmentGrouper`、`PortraitProcessor` 等组件处理**之前**完成。
+
+### 验证新游戏
+
+不要只在代码里想。**动真格写一个假假游戏适配器**来验证接口完备性。用完全不同的数据格式（JSON 代替标签文本），跑同一套 StoryPipeline。
+
+```csharp
+// 假假游戏端到端验证
 var pipeline = new StoryPipeline(
-    provider: new MockStoryProvider(),
-    parser: new MockScriptParser(),
-    renderer: new MockTagRenderer(),
+    provider: new OfflineFakeGameProvider(json),
+    parser: new FakeGameScriptParser(),
+    renderer: new FakeGameTagRenderer(),
     picDescService: new PicDescService());
 
-var results = await pipeline.ProcessEventAsync(act, chapters);
-Assert.Contains("Hello from Alice", results[0].Markdown);
+var results = await pipeline.ProcessEventAsync(act, chapters, OutputMode.Readable);
+Assert.Contains("Alice", results[0].Markdown);
 ```
+
+### 验证清单（从一个真实项目中总结）
+
+| 验证项目 | 方舟 | 假假游戏 |
+|---------|------|---------|
+| 数据格式 | 行式标签文本 `[name=""]` | 结构化 JSON |
+| 需要 tag.json | ✅ 需要 | ❌ 不需要 |
+| 立绘管理 | 3 槽位 + 显式 focus | 2 槽位 + 自动 focus |
+| 状态模型 | 累积（当前背景/立绘） | 有限自包含 + 背景累积 |
+| Type 映射 | 适配器内做 | 适配器内做 |
+| `TypeMappings` 应用 | 管线入口统一应用 | 管线入口统一应用 |
+| DB 支撑 | 支持（SqlSugar + Prefix DB） | 理论上支持 |
 
 ## 关键设计决策
 

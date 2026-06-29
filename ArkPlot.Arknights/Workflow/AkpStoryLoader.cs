@@ -82,11 +82,11 @@ public class AkpStoryLoader
 
         // 启动时清理历史脏缓存（下载失败但被标记为已完成的空内容记录）
         if (_actId != 0)
-            await PlotCache.CleanupEmptyPlotsAsync(_actId);
+            await PlotCache<FormattedTextEntry>.CleanupEmptyPlotsAsync(_actId);
 
         // 查缓存
         var cachedTitles = _actId != 0
-            ? await PlotCache.GetCachedTitlesAsync(_actId)
+            ? await PlotCache<FormattedTextEntry>.GetCachedTitlesAsync(_actId)
             : new HashSet<string>();
 
         // 收集需要下载的章节
@@ -97,12 +97,12 @@ public class AkpStoryLoader
             // 已缓存（Status=2）→ 从 DB 加载
             if (cachedTitles.Contains(chapter.Key))
             {
-                var loaded = await PlotCache.TryLoadAsync(_actId, chapter.Key);
+                var loaded = await PlotCache<FormattedTextEntry>.TryLoadAsync(_actId, chapter.Key);
                 if (loaded.HasValue)
                 {
                     loaded.Value.Plot.Content = new StringBuilder();
                     var pm = new PlotManager(loaded.Value.Plot);
-                    pm.CurrentPlot.TextVariants = loaded.Value.Entries;
+                    pm.CurrentPlot.TextVariants = loaded.Value.Entries.Cast<ScriptLine>().ToList();
                     ContentTable.Add(pm);
                     notifyBlock.OnChapterLoaded(new ChapterLoadedEventArgs(chapter.Key));
                     continue;
@@ -141,7 +141,7 @@ public class AkpStoryLoader
 
             // 写入 Status=1 缓存（基础下载，未解析）
             if (_actId != 0)
-                await PlotCache.SaveAsync(plot.CurrentPlot, plot.CurrentPlot.TextVariants, PlotStatus.Downloaded);
+                await PlotCache<FormattedTextEntry>.SaveAsync(plot.CurrentPlot, plot.CurrentPlot.TextVariants.Cast<FormattedTextEntry>().ToList(), PlotStatus.Downloaded);
         }
 
         ContentTable = ContentTable.OrderBy(plot =>

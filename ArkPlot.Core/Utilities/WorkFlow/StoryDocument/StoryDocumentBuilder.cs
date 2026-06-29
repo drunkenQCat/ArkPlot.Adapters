@@ -1,5 +1,5 @@
 using ArkPlot.Core.Model;
-using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.FormattedTextEntry>;
+using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.ScriptLine>;
 
 namespace ArkPlot.Core.Utilities.WorkFlow.StoryDocument;
 

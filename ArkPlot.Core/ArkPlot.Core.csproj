@@ -27,13 +27,4 @@
     <PackageReference Include="Typst.Net" Version="0.1.3-typst0.13.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\ArkPlot\ArkPlot.Vision\ArkPlot.Vision.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\..\ArkPlot\ArkPlot.Core\Model\**\*.cs" Link="Model\%(RecursiveDir)%(FileName)%(Extension)"
-             Exclude="..\..\ArkPlot\ArkPlot.Core\Model\PlotRules.cs;..\..\ArkPlot\ArkPlot.Core\Model\PrtsAssets.cs" />
-  </ItemGroup>
-
 </Project>

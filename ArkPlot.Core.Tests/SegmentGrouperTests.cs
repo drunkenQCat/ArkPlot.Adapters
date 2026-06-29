@@ -7,9 +7,9 @@ namespace ArkPlot.Core.Tests;
 [Collection("DbTests")]
 public class SegmentGrouperTests
 {
-    private static FormattedTextEntry MakeEntry(string mdText, string type = "dialog", int index = 0)
+    private static ScriptLine MakeEntry(string mdText, string type = "dialog", int index = 0)
     {
-        return new FormattedTextEntry { MdText = mdText, Type = type, Index = index };
+        return new ScriptLine { MdText = mdText, Type = type, Index = index };
     }
 
     [Fact]
@@ -22,7 +22,7 @@ public class SegmentGrouperTests
     [Fact]
     public void Group_SingleEntry_ReturnsSingleGroup()
     {
-        var entries = new List<FormattedTextEntry> { MakeEntry("hello") };
+        var entries = new List<ScriptLine> { MakeEntry("hello") };
         var result = SegmentGrouper.Group(entries);
         Assert.Single(result);
         Assert.Single(result[0]);
@@ -31,7 +31,7 @@ public class SegmentGrouperTests
     [Fact]
     public void Group_ExplicitSeparator_SplitsGroups()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeEntry("line1"),
             MakeEntry("---"),
@@ -46,7 +46,7 @@ public class SegmentGrouperTests
     [Fact]
     public void Group_PlaymusicSceneChange_SplitsGroups()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeEntry("scene1 dialogue"),
             MakeEntry("bgm_switch", type: "playmusic"),
@@ -59,7 +59,7 @@ public class SegmentGrouperTests
     [Fact]
     public void Group_LeadingDashesInGroup_AreCleared()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeEntry("---"),
             MakeEntry("content"),
@@ -86,7 +86,7 @@ public class SegmentGrouperTests
     public void Group_LargeSegment_ImplicitSplitAtDash()
     {
         // 20 lines + dash-starting line triggers split
-        var entries = new List<FormattedTextEntry>();
+        var entries = new List<ScriptLine>();
         for (int i = 0; i < 20; i++)
             entries.Add(MakeEntry($"line{i}", index: i));
         entries.Add(MakeEntry("-new section", index: 20));
@@ -100,7 +100,7 @@ public class SegmentGrouperTests
     [Fact]
     public void Group_MultipleExplicitSeparators_CreateMultipleGroups()
     {
-        var entries = new List<FormattedTextEntry>
+        var entries = new List<ScriptLine>
         {
             MakeEntry("a"),
             MakeEntry("---"),

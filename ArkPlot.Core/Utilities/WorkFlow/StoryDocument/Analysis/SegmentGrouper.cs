@@ -1,6 +1,6 @@
 using ArkPlot.Core.Model;
-using EntryGroups = System.Collections.Generic.List<System.Collections.Generic.List<ArkPlot.Core.Model.FormattedTextEntry>>;
-using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.FormattedTextEntry>;
+using EntryGroups = System.Collections.Generic.List<System.Collections.Generic.List<ArkPlot.Core.Model.ScriptLine>>;
+using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.ScriptLine>;
 
 namespace ArkPlot.Core.Utilities.WorkFlow.StoryDocument;
 
@@ -63,12 +63,12 @@ public static class SegmentGrouper
         return groups;
     }
 
-    private static bool ShouldSplit(FormattedTextEntry item, EntryList current)
+    private static bool ShouldSplit(ScriptLine item, EntryList current)
     {
         return current.Count >= MinSegmentSize && IsSeparator(item);
     }
 
-    private static bool IsSeparator(FormattedTextEntry item)
+    private static bool IsSeparator(ScriptLine item)
     {
         return item.MdText.StartsWith('-');
     }

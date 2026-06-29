@@ -1,6 +1,6 @@
 using System.IO;
 using ArkPlot.Core.Model;
-using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.FormattedTextEntry>;
+using EntryList = System.Collections.Generic.List<ArkPlot.Core.Model.ScriptLine>;
 
 namespace ArkPlot.Core.Utilities.WorkFlow.StoryDocument;
 
@@ -52,7 +52,7 @@ internal class ReadableRenderer : IMdRenderer
                     continue;
 
                 _describedImages.Add(url);
-                var bgName = Path.GetFileNameWithoutExtension(entry.Bg);
+                var bgName = "";
                 mdList.Add(
                     $"<p class=\"scene-desc\">【此处为对场景图片{bgName}的描述，请结合上下文将其融入文中】{desc}</p>"
                 );

@@ -28,7 +28,7 @@ public class FakeGameScriptParser : IScriptParser
         for (int i = 0; i < nodes.Count; i++)
         {
             var node = nodes[i];
-            var line = new FormattedTextEntry { Index = i };
+            var line = new ScriptLine { Index = i };
 
             var type = node.GetProperty("type").GetString() ?? "";
             line.Type = MapType(type);
