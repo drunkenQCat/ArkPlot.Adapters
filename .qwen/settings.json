@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(C:\\TechProjects\\About_MyRepos\\ArkPlot\\ArkPlot.Core\\Model/**)",
+      "Read(C:\\TechProjects\\About_MyRepos\\ArkPlot/**)",
+      "Read(C:\\TechProjects\\About_MyRepos\\ArkPlot\\ArkPlot.Avalonia\\bin\\Debug\\net9.0/**)"
+    ]
+  },
+  "$version": 4
+}
