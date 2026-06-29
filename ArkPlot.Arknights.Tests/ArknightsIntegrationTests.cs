@@ -5,6 +5,7 @@ using ArkPlot.Core.Services;
 using ArkPlot.Core.Utilities.WorkFlow;
 using Xunit;
 
+using ArkPlot.Arknights.Adapters;
 namespace ArkPlot.Arknights.Tests;
 
 [Collection("DbTests")]

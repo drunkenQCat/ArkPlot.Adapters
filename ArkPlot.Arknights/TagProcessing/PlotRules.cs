@@ -2,7 +2,10 @@ using System.IO;
 using ArkPlot.Core.Model;
 using Newtonsoft.Json.Linq;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.Workflow;
+using ArkPlot.Arknights.Parsing;
+namespace ArkPlot.Arknights.TagProcessing;
 
 /// <summary>
 /// 明日方舟章节文字替换规则。

@@ -2,7 +2,9 @@ using System.Text.RegularExpressions;
 using ArkPlot.Core.Model;
 using ArkPlot.Core.Services;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.Workflow;
+namespace ArkPlot.Arknights.TagProcessing;
 
 internal static class PlotRegsBasicHelper
 {

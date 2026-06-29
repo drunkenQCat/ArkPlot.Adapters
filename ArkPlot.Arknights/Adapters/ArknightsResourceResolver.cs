@@ -1,7 +1,10 @@
 using ArkPlot.Core.Interfaces;
 using ArkPlot.Core.Model;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.Parsing;
+using ArkPlot.Arknights.TagProcessing;
+namespace ArkPlot.Arknights.Adapters;
 
 /// <summary>
 /// 明日方舟资源解析器。

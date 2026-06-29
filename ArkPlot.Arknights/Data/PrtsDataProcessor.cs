@@ -2,7 +2,7 @@ using ArkPlot.Core.Model;
 using ArkPlot.Core.Services;
 using ArkPlot.Core.Utilities;
 
-namespace ArkPlot.Arknights;
+namespace ArkPlot.Arknights.Data;
 
 /// <summary>
 /// PRTS 数据处理器：下载并解析 PRTS Wiki 的资源数据（图片/音频/覆盖规则/立绘链接）。

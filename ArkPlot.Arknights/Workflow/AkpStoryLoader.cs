@@ -7,7 +7,10 @@ using ArkPlot.Core.Utilities;
 using ArkPlot.Core.Infrastructure;
 using PreloadSet = System.Collections.Generic.HashSet<System.Collections.Generic.KeyValuePair<string, string>>;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.Parsing;
+using ArkPlot.Arknights.TagProcessing;
+namespace ArkPlot.Arknights.Workflow;
 
 /// <summary>
 /// 从GitHub获取明日方舟各个章节数据的类。

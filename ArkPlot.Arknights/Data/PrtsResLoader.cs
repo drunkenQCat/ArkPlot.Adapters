@@ -4,7 +4,7 @@ using System.Threading;
 using ArkPlot.Core.Services;
 using PreloadSet = System.Collections.Generic.HashSet<System.Collections.Generic.KeyValuePair<string, string>>;
 
-namespace ArkPlot.Arknights;
+namespace ArkPlot.Arknights.Data;
 
 public class PrtsResLoader
 {

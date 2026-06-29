@@ -2,7 +2,10 @@ using System.Text.RegularExpressions;
 using ArkPlot.Core.Model;
 using ArkPlot.Core.Services;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.Workflow;
+using ArkPlot.Arknights.Parsing;
+namespace ArkPlot.Arknights.TagProcessing;
 
 public partial class TagProcessor
 {

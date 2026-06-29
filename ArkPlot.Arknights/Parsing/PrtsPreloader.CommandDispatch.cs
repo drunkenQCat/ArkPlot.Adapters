@@ -3,7 +3,9 @@ using ArkPlot.Core.Services;
 using ArkPlot.Core.Utilities;
 using ResItem = System.Collections.Generic.KeyValuePair<string, string>;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.TagProcessing;
+namespace ArkPlot.Arknights.Parsing;
 
 public partial class PrtsPreloader
 {

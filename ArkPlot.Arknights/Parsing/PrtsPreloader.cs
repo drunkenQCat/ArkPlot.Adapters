@@ -2,7 +2,9 @@ using ArkPlot.Core.Model;
 using ArkPlot.Core.Services;
 using PreloadSet = System.Collections.Generic.HashSet<System.Collections.Generic.KeyValuePair<string, string>>;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.TagProcessing;
+namespace ArkPlot.Arknights.Parsing;
 
 /// <summary>
 /// PRTS 剧情预加载器：解析明日方舟标签语法，收集资源。

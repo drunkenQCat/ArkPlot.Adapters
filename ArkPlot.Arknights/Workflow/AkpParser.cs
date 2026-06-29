@@ -1,6 +1,9 @@
 using ArkPlot.Core.Model;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.Parsing;
+using ArkPlot.Arknights.TagProcessing;
+namespace ArkPlot.Arknights.Workflow;
 
 /// <summary>
 /// AkpParser 类用于解析明日方舟剧情文本文件，并将其转换为 Markdown 文件。

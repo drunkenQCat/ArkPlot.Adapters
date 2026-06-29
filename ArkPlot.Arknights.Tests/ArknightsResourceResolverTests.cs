@@ -1,6 +1,7 @@
 using ArkPlot.Core.Interfaces;
 using ArkPlot.Arknights;
 
+using ArkPlot.Arknights.Adapters;
 namespace ArkPlot.Arknights.Tests;
 
 [Collection("DbTests")]

@@ -1,7 +1,8 @@
 using System.Text.RegularExpressions;
 using ArkPlot.Core.Services;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Parsing;
+namespace ArkPlot.Arknights.Data;
 
 /// <summary>
 ///     Partial class for processing portrait data in the PrtsDataProcessor.

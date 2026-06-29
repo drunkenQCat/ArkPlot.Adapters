@@ -1,7 +1,9 @@
 using ArkPlot.Core.Model;
 using ArkPlot.Core.Services;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.TagProcessing;
+namespace ArkPlot.Arknights.Parsing;
 
 public partial class PrtsPreloader
 {

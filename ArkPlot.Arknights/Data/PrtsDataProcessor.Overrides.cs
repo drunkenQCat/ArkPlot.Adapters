@@ -1,7 +1,7 @@
 using System.Text.Json;
 using ArkPlot.Core.Model;
 
-namespace ArkPlot.Arknights;
+namespace ArkPlot.Arknights.Data;
 
 public partial class PrtsDataProcessor
 {

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using ArkPlot.Core.Model;
 
-namespace ArkPlot.Arknights;
+namespace ArkPlot.Arknights.Data;
 
 /// <summary>
 /// PRTS 资源数据容器：管理音频、角色图片、背景图片等资源数据字典。

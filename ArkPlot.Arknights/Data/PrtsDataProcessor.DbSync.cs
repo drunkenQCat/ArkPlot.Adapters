@@ -4,7 +4,7 @@ using ArkPlot.Core.Model;
 using ArkPlot.Core.Services;
 using SqlSugar;
 
-namespace ArkPlot.Arknights;
+namespace ArkPlot.Arknights.Data;
 
 /// <summary>
 /// DB 同步逻辑 partial：SHA 门控 → 下载落库 / 从库加载

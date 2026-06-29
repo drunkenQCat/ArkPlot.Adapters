@@ -1,4 +1,6 @@
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.TagProcessing;
+namespace ArkPlot.Arknights.Parsing;
 
 /// <summary>正则匹配结果，包含标签、命令、纯标签和角色名。</summary>
 internal class Matched

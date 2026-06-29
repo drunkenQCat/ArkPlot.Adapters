@@ -3,7 +3,10 @@ using ArkPlot.Core.Model;
 using ArkPlot.Core.Services;
 using ArkPlot.Core.Utilities;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.Parsing;
+using ArkPlot.Arknights.TagProcessing;
+namespace ArkPlot.Arknights.Adapters;
 
 /// <summary>
 /// 明日方舟剧情数据提供者。

@@ -1,6 +1,8 @@
 using System.Text.RegularExpressions;
 
-namespace ArkPlot.Arknights;
+using ArkPlot.Arknights.Data;
+using ArkPlot.Arknights.TagProcessing;
+namespace ArkPlot.Arknights.Parsing;
 
 internal partial class ArkPlotRegs
 {
