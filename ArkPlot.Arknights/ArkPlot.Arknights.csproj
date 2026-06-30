@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ArkPlot.Core\ArkPlot.Core.csproj" />
-    <ProjectReference Include="..\..\ArkPlot\ArkPlot.Vision\ArkPlot.Vision.csproj" />
   </ItemGroup>
 
 </Project>
