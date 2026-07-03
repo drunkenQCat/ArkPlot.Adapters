@@ -25,15 +25,19 @@ public class AkpStoryLoader
     private readonly NotificationBlock notifyBlock = new();
     private readonly PrtsAssets _assets = new();
     private readonly NetworkUtility _http = new();
+    private readonly Action<string>? _onLog;
 
     /// <param name="act">当前活动</param>
     /// <param name="chapters">该活动下的章节列表</param>
-    public AkpStoryLoader(Act act, List<StoryChapter> chapters)
+    /// <param name="onLog">外部日志委托，用于将处理进度输出到 stdout 等外部通道</param>
+    public AkpStoryLoader(Act act, List<StoryChapter> chapters, Action<string>? onLog = null)
     {
         StoryName = act.Name;
         lang = act.Lang;
         _actId = act.Id;
         _chapters = chapters;
+        _onLog = onLog;
+        ArknightsDbInitializer.Init();
     }
 
     /// <summary>
@@ -89,6 +93,8 @@ public class AkpStoryLoader
             ? await PlotCache<FormattedTextEntry>.GetCachedTitlesAsync(_actId)
             : new HashSet<string>();
 
+        _onLog?.Invoke($"章节加载开始：共 {filteredChapters.Count} 章，已缓存 {cachedTitles.Count} 章，需下载 {filteredChapters.Count - cachedTitles.Count(cachedTitles.Contains)} 章");
+
         // 收集需要下载的章节
         var chaptersToDownload = new List<(string title, string url, long chapterId)>();
 
@@ -123,6 +129,8 @@ public class AkpStoryLoader
         var downloadedChapters = await Task.WhenAll(downloadTasks);
         ct.ThrowIfCancellationRequested();
 
+        _onLog?.Invoke($"下载完成：{downloadedChapters.Length} 章");
+
         // 串行处理下载结果并写入数据库（避免 SQLite 并发冲突）
         foreach (var (title, chapterId, content) in downloadedChapters)
         {
@@ -156,6 +164,7 @@ public class AkpStoryLoader
     /// </summary>
     public PreloadSet GetPreloadInfo()
     {
+        _onLog?.Invoke($"预加载资源开始：{ContentTable.Count} 章");
         var resourceSets = ContentTable.Select(c =>
         {
             var pl = new PrtsPreloader(c);
@@ -183,6 +192,7 @@ public class AkpStoryLoader
         foreach (var pm in ContentTable)
         {
             ct.ThrowIfCancellationRequested();
+            _onLog?.Invoke($"解析文档：{pm.CurrentPlot.Title}");
             await pm.StartParseLines(parser);
         }
     }

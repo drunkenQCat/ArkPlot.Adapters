@@ -44,7 +44,6 @@ public static class DbFactory
             typeof(Act),
             typeof(StoryChapter),
             typeof(Plot),
-            typeof(ScriptLine),
             typeof(SyncState),
             typeof(PicDescription)
         );

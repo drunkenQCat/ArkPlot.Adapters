@@ -4,6 +4,8 @@ namespace ArkPlot.Core.Services;
 
 public class NotificationBlock
 {
+    public static NotificationBlock Instance { get; } = new();
+
     public event EventHandler<string>? CommonEventHandler;
     public event EventHandler<ChapterLoadedEventArgs>? ChapterLoaded;
     public event EventHandler<LineNoMatchEventArgs>? LineNoMatch;

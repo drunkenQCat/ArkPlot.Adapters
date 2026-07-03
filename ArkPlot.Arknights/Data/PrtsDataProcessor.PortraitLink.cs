@@ -31,7 +31,9 @@ public partial class PrtsDataProcessor
         {
             new NotificationBlock().RaiseCommonEvent($"Character key [\"{key}\"] not exist, please check the link list");
             // fall to thorns' portrait
-            return Res.DataChar["char_293_thorns_1"];
+            return Res.DataChar.TryGetValue("char_293_thorns_1", out var fallbackUrl)
+                ? fallbackUrl
+                : "https://media.prts.wiki/d/d0/Avg_char_293_thorns_1.png";
         }
 
         var newKey = linkItem.GetProperty("array")[index]

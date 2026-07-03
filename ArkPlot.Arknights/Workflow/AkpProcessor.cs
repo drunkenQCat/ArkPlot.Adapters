@@ -20,12 +20,14 @@ public abstract partial class AkpProcessor
         PicDescService? picDescService = null,
         bool enableDescriptions = true,
         OutputMode outputMode = OutputMode.Readable,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        Action<string>? onLog = null)
     {
         var md = new StringBuilder();
         foreach (var chapter in plotList)
         {
             ct.ThrowIfCancellationRequested();
+            onLog?.Invoke($"导出文档：{chapter.CurrentPlot.Title}");
             var textList = chapter.CurrentPlot.TextVariants;
 
             if (picDescService != null)
