@@ -13,7 +13,7 @@ public partial class PrtsDataProcessor
     public readonly PrtsAssets Res;
     private readonly NetworkUtility _http = new();
 
-    public PrtsDataProcessor() : this(new PrtsAssets()) { }
+    public PrtsDataProcessor() : this(PrtsAssets.Instance) { }
     public PrtsDataProcessor(PrtsAssets assets) { Res = assets; }
 
     public async Task GetAllData()
