@@ -51,7 +51,7 @@ public partial class PrtsDataProcessor
         var audioKeyLower = audioKey.ToLower();
 
         if (audioKey.StartsWith('$'))
-            return Res.DataAudio.TryGetValue(audioKeyLower[1..], out var audioUrl) ? audioUrl : "";
+            return GetOrLoadResource(audioKeyLower[1..], "Audio") ?? "";
 
         if (audioKey.StartsWith('@'))
             return string.Concat(PrtsAssets.AudioAssetsUrl, audioKeyLower[1..]);

@@ -8,8 +8,6 @@ namespace ArkPlot.Arknights.Data;
 /// </summary>
 public class PrtsAssets
 {
-    public static PrtsAssets Instance { get; } = new();
-
     public const string AudioAssetsUrl = "https://torappu.prts.wiki/assets/";
 
     public List<PrtsData> AllData;

@@ -22,7 +22,8 @@ public partial class PrtsPreloader
         if (string.IsNullOrEmpty(key))
             return [];
 
-        if (!_prts.Res.DataImage.TryGetValue(key, out var url))
+        var url = _prts.GetImageUrl(key);
+        if (string.IsNullOrEmpty(url))
         {
             Console.WriteLine($"<image> Linked key [{key}] not exist.");
             return [];
@@ -76,13 +77,17 @@ public partial class PrtsPreloader
                 ? "bg_" + img.ToLower()
                 : img.ToLower();
 
-            if (!string.IsNullOrWhiteSpace(key) && _prts.Res.DataChar.TryGetValue(key, out var url))
+            if (!string.IsNullOrWhiteSpace(key))
             {
-                Assets.Add(new ResItem(key, url));
-            }
-            else
-            {
-                Console.WriteLine($"<{commandDict["type"]}> Linked key [{key}] not exist.");
+                var url = _prts.GetCharUrl(key);
+                if (!string.IsNullOrEmpty(url))
+                {
+                    Assets.Add(new ResItem(key, url));
+                }
+                else
+                {
+                    Console.WriteLine($"<{commandDict["type"]}> Linked key [{key}] not exist.");
+                }
             }
         }
 

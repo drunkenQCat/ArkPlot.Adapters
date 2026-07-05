@@ -9,6 +9,8 @@ namespace ArkPlot.Arknights.Data;
 /// </summary>
 public partial class PrtsDataProcessor
 {
+    private const string ThornsFallbackUrl = "https://media.prts.wiki/d/d0/Avg_char_293_thorns_1.png";
+
     /// <summary>
     ///     从原始角色名（如 "char_220_grani#3"）提取 CharacterCode（如 "char_220_grani"）。
     ///     内部复用 FindPortraitInLinkData 的解析逻辑。
@@ -27,26 +29,25 @@ public partial class PrtsDataProcessor
     public string GetPortraitUrl(string inputKey)
     {
         (var key, var index) = FindPortraitInLinkData(inputKey);
-        if (!Res.PortraitLinkDocument.RootElement.TryGetProperty(key, out var linkItem))
+        if (key == "-1")
         {
             new NotificationBlock().RaiseCommonEvent($"Character key [\"{key}\"] not exist, please check the link list");
-            // fall to thorns' portrait
-            return Res.DataChar.TryGetValue("char_293_thorns_1", out var fallbackUrl)
-                ? fallbackUrl
-                : "https://media.prts.wiki/d/d0/Avg_char_293_thorns_1.png";
+            return GetOrLoadResource("char_293_thorns_1", "Char") ?? ThornsFallbackUrl;
         }
 
-        var newKey = linkItem.GetProperty("array")[index]
-            .GetProperty("name")
-            .GetString();
-        if (newKey is null)
-            // Log error - character asset not found
+        var links = GetOrLoadLinks(key);
+        if (links.Count == 0 || index < 0 || index >= links.Count)
+        {
+            new NotificationBlock().RaiseCommonEvent($"Character key [\"{key}\"] not exist, please check the link list");
+            return GetOrLoadResource("char_293_thorns_1", "Char") ?? ThornsFallbackUrl;
+        }
+
+        var newKey = links[index].PortraitName;
+        if (string.IsNullOrEmpty(newKey))
             new NotificationBlock().RaiseCommonEvent($"<character> Linked key [{key}] not exist.");
 
-        // if finally nothing found, return Thorn's head
-        newKey = newKey is null ? "char_293_thorns_1" : newKey.ToLower();
-        var isPortraitExists = Res.DataChar.TryGetValue(newKey, out var url);
-        return isPortraitExists ? url! : "https://media.prts.wiki/d/d0/Avg_char_293_thorns_1.png";
+        newKey = string.IsNullOrEmpty(newKey) ? "char_293_thorns_1" : newKey.ToLower();
+        return GetOrLoadResource(newKey, "Char") ?? ThornsFallbackUrl;
     }
 
     /// <summary>
@@ -80,7 +81,8 @@ public partial class PrtsDataProcessor
         var portraitNameGroup = matchedCodeParts.Groups[1].Value;
         var emotionIndex = GetSubIndex(3);
 
-        if (!Res.PortraitLinkDocument.RootElement.TryGetProperty(portraitNameGroup, out var linkItem))
+        var links = GetOrLoadLinks(portraitNameGroup);
+        if (links.Count == 0)
         {
             Console.WriteLine($"The appointed key [{portraitNameGroup}] not exist, has skipped the data.");
             return ("-1", -1);
@@ -104,41 +106,36 @@ public partial class PrtsDataProcessor
                 return (portraitNameGroup, outputIndex);
             default:
                 return (portraitNameGroup,
-                    Math.Max(emotionIndex ?? 1 - 1, 0)); // Adjusting because array index is zero-based
+                    Math.Max(emotionIndex ?? 1 - 1, 0));
         }
 
-        /*
-         * different conditions to process
-         */
         (string portraitNameGroup, int) ProcessDollarSymbol()
         {
-            var subIndex = "$" + (groupSubIndex ?? emotionIndex); // 组合group
+            var subIndex = "$" + (groupSubIndex ?? emotionIndex);
             emotionIndex = groupIndex ?? emotionIndex;
-            var arrayElements = linkItem.GetProperty("array")
-                .EnumerateArray()
-                .Select((element, index) => new { Name = element.GetProperty("name").GetString(), Index = index })
+
+            var matchingElements = links
+                .Select((l, idx) => new { Name = l.PortraitName, Index = idx })
+                .Where(e => e.Name!.EndsWith(subIndex))
                 .ToList();
 
-            var matchingElements = arrayElements.Where(element => element.Name!.EndsWith(subIndex)).ToList();
             if (matchingElements.Count == 0)
             {
                 Console.WriteLine($"No elements ending with {subIndex}.");
-                return (portraitNameGroup, 0); // Using default index if no matching elements
+                return (portraitNameGroup, 0);
             }
 
             emotionIndex = Math.Min(emotionIndex ?? 0, matchingElements.Count - 1);
             var targetElement = matchingElements.ElementAt((int)emotionIndex);
 
-            // Return original name and adjusted index within the global array
-            return (portraitNameGroup, arrayElements.IndexOf(targetElement));
+            return (portraitNameGroup, targetElement.Index);
         }
 
         (string, int) ProcessAtSymbol()
         {
-            for (var idx = 0; idx < linkItem.GetProperty("array").GetArrayLength(); idx++)
+            for (var idx = 0; idx < links.Count; idx++)
             {
-                var currentElement = linkItem.GetProperty("array")[idx];
-                if (currentElement.GetProperty("alias").GetString() == emotionIndex.ToString())
+                if (links[idx].Alias == emotionIndex.ToString())
                     return (portraitNameGroup, idx);
             }
 
@@ -149,7 +146,7 @@ public partial class PrtsDataProcessor
         int ProcessHashSymbol()
         {
             var outputIndex = emotionIndex ?? 0;
-            if (outputIndex >= linkItem.GetProperty("array").GetArrayLength())
+            if (outputIndex >= links.Count)
             {
                 Console.WriteLine(
                     $"The analyze key [{portraitNameGroup} : {outputIndex}] is out of range, use the default char to instead");
@@ -159,9 +156,6 @@ public partial class PrtsDataProcessor
             return outputIndex;
         }
 
-        /*
-         * A utility method
-         */
         int? GetSubIndex(int index)
         {
             return matchedCodeParts.Groups[index].Success

@@ -47,7 +47,8 @@ public class PortraitLinkRegressionTests : IDisposable
     }
 
     /// <summary>
-    /// 核心验证：EnsureSyncedAsync 加载后，new PrtsDataProcessor() 能访问到同一份数据。
+    /// 核心验证：EnsureSyncedAsync 加载后，new PrtsDataProcessor() 能通过 ORM 懒加载查到数据。
+    /// 不再依赖单例 — 每个实例独立从 DB 查，首次查后走实例缓存。
     /// </summary>
     [Fact]
     public async Task Singleton_DataShared_BetweenPrtsDataProcessorInstances()
@@ -59,14 +60,12 @@ public class PortraitLinkRegressionTests : IDisposable
         // 模拟 PrtsPreloader 内部 new PrtsDataProcessor()
         var internalPrts = new PrtsDataProcessor();
 
-        Assert.True(internalPrts.Res.DataChar.Count > 0, "DataChar should be loaded via singleton");
-        Assert.True(internalPrts.Res.DataImage.Count > 0, "DataImage should be loaded via singleton");
-        Assert.True(internalPrts.Res.DataAudio.Count > 0, "DataAudio should be loaded via singleton");
-
-        // PortraitLinkDocument 不应该是空 "{}"
-        var docJson = internalPrts.Res.PortraitLinkDocument.RootElement.ToString();
-        Assert.NotEqual("{}", docJson);
-        Assert.True(docJson.Length > 100, "PortraitLinkDocument should have content");
+        // 实例 B 不走 Res（单例已去掉），走 ORM 懒加载 + 实例缓存
+        // 验证能查到角色数据
+        var url = internalPrts.GetPortraitUrl("char_220_grani");
+        Assert.False(string.IsNullOrEmpty(url));
+        Assert.Contains("prts.wiki", url);
+        Assert.DoesNotContain("thorns", url);
     }
 
     /// <summary>
@@ -118,13 +117,19 @@ public class PortraitLinkRegressionTests : IDisposable
         preloader.ParseAndCollectAssets();
 
         // 生成资源链接报告 MD
+        var db = DbFactory.GetClient();
+        var charCount = db.Queryable<PrtsResource>().Where(r => r.ResourceType == "Char").Count();
+        var imageCount = db.Queryable<PrtsResource>().Where(r => r.ResourceType == "Image").Count();
+        var audioCount = db.Queryable<PrtsResource>().Where(r => r.ResourceType == "Audio").Count();
+        var linkCount = db.Queryable<PrtsPortraitLink>().Count();
+
         var sb = new StringBuilder();
         sb.AppendLine("# Portrait Link 回归测试报告\n");
         sb.AppendLine($"- 测试时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        sb.AppendLine($"- PrtsAssets.Instance.DataChar 条目数: {PrtsAssets.Instance.DataChar.Count}");
-        sb.AppendLine($"- PrtsAssets.Instance.DataImage 条目数: {PrtsAssets.Instance.DataImage.Count}");
-        sb.AppendLine($"- PrtsAssets.Instance.DataAudio 条目数: {PrtsAssets.Instance.DataAudio.Count}");
-        sb.AppendLine($"- PortraitLinkDocument 大小: {PrtsAssets.Instance.PortraitLinkDocument.RootElement.ToString().Length} chars\n");
+        sb.AppendLine($"- DB PrtsResources (Char): {charCount}");
+        sb.AppendLine($"- DB PrtsResources (Image): {imageCount}");
+        sb.AppendLine($"- DB PrtsResources (Audio): {audioCount}");
+        sb.AppendLine($"- DB PrtsPortraitLinks: {linkCount}\n");
         sb.AppendLine("## 解析结果\n");
 
         var entries = plotManager.CurrentPlot.TextVariants;
