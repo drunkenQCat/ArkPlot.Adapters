@@ -28,7 +28,7 @@ internal class PromptRenderer : IMdRenderer
             if (_config.MusicSkipTypes.Contains(entry.Type))
                 continue;
 
-            if (string.IsNullOrWhiteSpace(entry.MdText))
+            if (string.IsNullOrWhiteSpace(entry.MdText) && string.IsNullOrWhiteSpace(entry.PicDesc))
                 continue;
 
             if (entry.MdText.Trim() == "---")
