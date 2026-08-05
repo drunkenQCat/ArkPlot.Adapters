@@ -38,7 +38,11 @@ public partial class PrtsPreloader
             return (urls, 0);
 
         var isFocusNone = commandDict.TryGetValue("focus", out var focus) && focus == "none";
-        var isRemoving = !commandDict.TryGetValue("name", out var name) || string.IsNullOrEmpty(name);
+        // 只有"显式移除立绘"的 charslot 才清理槽位：无 name 且无 action。
+        // 带 action 的指令（如 shake/power/times）只是对已有立绘做动画，不应清除该槽位的立绘，
+        // 否则后续对话会把 focus 误判到另一个槽位的立绘上。
+        var isRemoving = (!commandDict.TryGetValue("name", out var name) || string.IsNullOrEmpty(name))
+            && !commandDict.ContainsKey("action");
 
         if (isRemoving)
             _slotUrls.Remove(slot);

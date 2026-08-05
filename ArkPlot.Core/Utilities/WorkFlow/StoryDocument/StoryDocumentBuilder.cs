@@ -26,10 +26,21 @@ public class StoryDocumentBuilder
         RemoveEmptyLines();
         NormalizeStageDirections();
         _ctx.Groups.AddRange(SegmentGrouper.Group(_ctx.Lines));
+
+        // ── 立绘处理管线。顺序有严格依赖，改动需谨慎（Debug 提示）──
+        // 1. DetectPortraits：识别所有立绘组，收集 PortraitIndexes 与 DescribedCharacters 的初始状态。
+        // 2. InjectPortraitFactsForPrompt（仅 Prompt）：必须在此执行，把 portrait-facts 内联到
+        //    每个立绘组第一个非立绘行之前。若挪到 RemovePortraitLines 之后，立绘行已被清空，
+        //    "只出场不说话"的角色会因无后续对话行可触发 EmitCharacterFacts 而丢失描述。
+        // 3. RemovePortraitLines：清空立绘行 MdText（PromptRenderer 会跳过空行）。
+        // 4. GenerateCharts（仅 Readable）：生成 HTML 立绘表格。必须放在 RemovePortraitLines 之后，
+        //    否则表格被插入尚未清空的立绘行，随后又被 RemovePortraitLines 一并清掉。
         PortraitProcessor.DetectPortraits(_ctx);
+        if (outputMode == OutputMode.PromptOptimized)
+            PortraitProcessor.InjectPortraitFactsForPrompt(_ctx);
+        PortraitProcessor.RemovePortraitLines(_ctx);
         if (outputMode != OutputMode.PromptOptimized)
             PortraitProcessor.GenerateCharts(_ctx);
-        PortraitProcessor.RemovePortraitLines(_ctx);
     }
 
     private void RemoveEmptyLines()
