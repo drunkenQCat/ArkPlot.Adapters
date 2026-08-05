@@ -24,23 +24,37 @@ public class StorySyncService
     /// <summary>
     /// 获取指定仓库的最新 commit SHA。
     /// GitHub API 需要 User-Agent，否则返回 403。
+    /// 兜底策略：先走代理前缀（若配置），失败则回退直连原始 GitHub API。
     /// </summary>
     public static async Task<string?> GetLatestCommitShaAsync(string repo)
     {
-        var url = GitHubProxy.GetCommitApiUrl(repo);
-        try
+        var proxiedUrl = GitHubProxy.GetCommitApiUrl(repo);
+        var rawUrl = $"https://api.github.com/repos/{repo}/commits?per_page=1";
+
+        // 代理 URL 与原始 URL 相同时（未配置代理），只试一次
+        var urls = proxiedUrl == rawUrl
+            ? new[] { rawUrl }
+            : new[] { proxiedUrl, rawUrl };
+
+        foreach (var url in urls)
         {
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("User-Agent", "ArkPlot/1.0");
-            var json = await client.GetStringAsync(url);
-            var arr = JArray.Parse(json);
-            return arr[0]?["sha"]?.ToString();
+            try
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("User-Agent", "ArkPlot/1.0");
+                var json = await client.GetStringAsync(url);
+                var arr = JArray.Parse(json);
+                if (arr.Count > 0 && arr[0]?["sha"] is not null)
+                    return arr[0]!["sha"]!.ToString();
+            }
+            catch (Exception ex)
+            {
+                GitHubProxy.CheckConnectionError(url, exception: ex);
+                // 继续尝试下一个 URL（代理失败 → 直连）
+            }
         }
-        catch (Exception ex)
-        {
-            GitHubProxy.CheckConnectionError(url, exception: ex);
-            return null;
-        }
+
+        return null;
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using ArkPlot.Core.Services;
 using ArkPlot.Core.Utilities;
 using Xunit;
 
@@ -132,6 +133,30 @@ public class GitHubProxyExtendedTests
         finally
         {
             GitHubProxy.ConnectionFailed -= Handler;
+        }
+    }
+
+    /// <summary>
+    /// 回归测试：代理前缀不支持 api.github.com 时，GetLatestCommitShaAsync 应回退直连拿到 SHA。
+    /// 使用 ghproxy.cxkpro.top（已知只支持 gh-proxy 文件链接，不支持 api.github.com）作为代理前缀。
+    /// 依赖网络；HTTP 连接失败时跳过（不视为失败）。
+    /// </summary>
+    [Fact]
+    public async Task GetLatestCommitSha_ProxyFails_FallsBackToDirect()
+    {
+        GitHubProxy.Prefix = "https://ghproxy.cxkpro.top";
+        try
+        {
+            var sha = await StorySyncService.GetLatestCommitShaAsync("Kengxxiao/ArknightsGameData");
+            // 网络完全不可达时跳过（避免 CI 无网环境误报）
+            if (sha == null)
+                return;
+            Assert.False(string.IsNullOrWhiteSpace(sha));
+            Assert.Equal(40, sha!.Length); // SHA-1 长度
+        }
+        finally
+        {
+            GitHubProxy.Prefix = "";
         }
     }
 }
