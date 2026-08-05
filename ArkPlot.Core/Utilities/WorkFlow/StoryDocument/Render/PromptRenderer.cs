@@ -61,9 +61,28 @@ internal class PromptRenderer : IMdRenderer
             mdText = mdText.Replace("`居中字幕`:", "");
         }
 
+        // Prompt 模式面向 LLM，不携带真实媒体 URL。清空 img/audio/source 的 src 引号内容，
+        // 保留标签结构与 alt/class 等语义信息，避免把外部资源链接塞进提示词。
+        mdText = MediaSrcRegex().Replace(mdText, "src=\"\"");
+
         return mdText;
     }
 
+    private static readonly System.Text.RegularExpressions.Regex _mediaSrcRegex =
+        new(@"src=\""[^\""]*\""", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static System.Text.RegularExpressions.Regex MediaSrcRegex() => _mediaSrcRegex;
+
+    /// <summary>
+    /// 在角色首次说话时输出其 portrait-facts。
+    ///
+    /// IMPORTANT（Debug 提示）：
+    /// 本方法只在"对话行"（同时具备 CharacterName + CharacterCode 的行）上被调用。
+    /// 因此"只出场不说话"的角色（立绘行被 RemovePortraitLines 清空、无对话行）不会走到这里，
+    /// 其描述由 PortraitProcessor.InjectPortraitFactsForPrompt 在管线早期补注入。
+    /// 若发现某角色描述缺失，排查：该角色是否只出场不说话 → 需走 InjectPortraitFactsForPrompt；
+    /// 若该角色已说话但无描述 → 检查 CharacterCode 是否为空、PicFacts 是否为空。
+    /// </summary>
     private void EmitCharacterFacts(ScriptLine entry, List<string> mdList)
     {
         if (string.IsNullOrEmpty(entry.CharacterName)
