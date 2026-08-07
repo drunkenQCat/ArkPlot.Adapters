@@ -24,6 +24,23 @@ public class PicDescServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task GetOrCreatePicDescAsync_SkipCache_DoesNotWriteToDb()
+    {
+        using var svc = new PicDescService(
+            describeByUrl: url => Task.FromResult("[Mock描述] 假描述，不应入库"),
+            skipCache: true);
+        var result = await svc.GetOrCreatePicDescAsync("https://media.prts.wiki/test.png");
+
+        Assert.Contains("[Mock描述]", result);
+
+        // Mock 描述不应写入数据库缓存
+        var db = DbFactory.GetClient();
+        var count = db.Queryable<PicDescription>()
+            .Count(it => it.ImageUrl == "https://media.prts.wiki/test.png");
+        Assert.Equal(0, count);
+    }
+
+    [Fact]
     public async Task GetOrCreatePicDescAsync_NonImageUrl_ReturnsEmpty()
     {
         using var svc = new PicDescService();

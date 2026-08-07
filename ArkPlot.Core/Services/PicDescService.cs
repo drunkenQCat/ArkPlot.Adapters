@@ -29,6 +29,7 @@ public class PicDescService : IDisposable
     private readonly Func<string, Task<string>>? _extractFacts;
     private readonly string _cacheDir;
     private readonly bool _debugMode;
+    private readonly bool _skipCache;
 
     /// <summary>
     /// YAML 提取的系统提示词，用于将散文描述转化为结构化视觉事实。
@@ -92,16 +93,19 @@ mood: [压抑, 冷寂]
     /// <param name="describeByUrl">可选的图片描述函数，接收图片 URL 返回描述文本。为 null 时使用占位符模式。</param>
     /// <param name="extractFacts">可选的 YAML 提取函数，接收散文描述返回结构化视觉事实。为 null 时不提取。</param>
     /// <param name="debugMode">Debug 模式：强制跳过数据库缓存，重新生成描述并清理。</param>
+    /// <param name="skipCache">跳过数据库写入（用于 Mock 等不产生真实数据的场景，避免污染缓存）。</param>
     public PicDescService(
         Func<string, Task<string>>? describeByUrl = null,
         Func<string, Task<string>>? extractFacts = null,
         bool debugMode = false,
+        bool skipCache = false,
         IEnumerable<string>? additionalSkipUrls = null,
         IDbFactory? dbFactory = null)
     {
         _describeByUrl = describeByUrl;
         _extractFacts = extractFacts;
         _debugMode = debugMode;
+        _skipCache = skipCache;
 
         if (additionalSkipUrls != null)
         {
@@ -275,7 +279,8 @@ mood: [压抑, 冷寂]
             }
         }
 
-        UpsertPicDesc(dedupKey, imageUrl, description, facts);
+        if (!_skipCache)
+            UpsertPicDesc(dedupKey, imageUrl, description, facts);
         return new PicDescResult(description, facts);
     }
 
