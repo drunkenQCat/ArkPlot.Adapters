@@ -85,6 +85,45 @@ public class CharslotShakeActionRegressionTests : IDisposable
         Assert.Contains("doberm", string.Join(" ", dialog.Portraits));
     }
 
+    /// <summary>
+    /// 回归测试：纯焦点切换指令（无 name、无 action）不应移除对应槽位的立绘。
+    ///
+    /// 旧 bug：`[charslot(slot="l",focus="l")]` 只切换镜头焦点到左槽、不带 name，
+    /// 被 GetCurrentPortraitsFromSlot 误判为"移除立绘"，导致后续对话行的 Portraits
+    /// 只剩另一槽位的立绘（如工程部干员说话时只剩安洁莉娜）。
+    /// </summary>
+    [Fact]
+    public void FocusSwitch_KeepsSlotPortrait_ForSubsequentDialog()
+    {
+        if (!HasDb) return;
+
+        DbFactory.ConfigureForTesting($"Data Source={_dbPath}");
+
+        var script = new StringBuilder(string.Join("\n", new[]
+        {
+            "[charslot(slot=\"l\",name=\"avg_220_grani_1\")]",
+            "[charslot(slot=\"r\",name=\"char_130_doberm_ex\")]",
+            "[charslot(slot=\"l\",name=\"avg_220_grani_1\",focus=\"l\")]",
+            "[charslot(slot=\"l\",focus=\"l\")]",
+            "[name=\"格拉尼\"]我在这里。",
+        }));
+
+        var plotManager = new PlotManager("focus_switch_test", script);
+        var textVariants = SplitEntries(script.ToString());
+        plotManager.CurrentPlot.TextVariants = textVariants.Cast<ArkPlot.Core.Model.ScriptLine>().ToList();
+        var preloader = new PrtsPreloader(plotManager);
+
+        var entries = textVariants;
+        foreach (var e in entries)
+            preloader.ParseOriginalText(e);
+
+        // 最后一行是格拉尼对话，纯焦点切换后应同时保留 l 槽（grani）和 r 槽（doberm）立绘
+        var dialog = entries.Last();
+        Assert.Equal("格拉尼", dialog.CharacterName);
+        Assert.Contains("grani", string.Join(" ", dialog.Portraits));
+        Assert.Contains("doberm", string.Join(" ", dialog.Portraits));
+    }
+
     private static List<FormattedTextEntry> SplitEntries(string raw)
     {
         return raw.Split('\n', StringSplitOptions.None)
