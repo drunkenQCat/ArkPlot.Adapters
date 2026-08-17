@@ -41,6 +41,76 @@ public class PicDescServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task GetOrCreatePicDescAsync_SkipCache_IgnoresExistingDbCache()
+    {
+        // 数据库已有真实缓存（模拟之前真实 API 生成过的数据）
+        var db = DbFactory.GetClient();
+        db.Insertable(new PicDescription
+        {
+            DedupKey = "https://media.prts.wiki/existing.png",
+            ImageUrl = "https://media.prts.wiki/existing.png",
+            PicDesc = "来自真实 API 的旧缓存",
+            PicFacts = "旧事实",
+            Source = "Vision",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        }).ExecuteCommand();
+
+        // Mock 模式下 skipCache=true：必须无视 DB 已有缓存，强制重新生成（触发描述流程/日志）
+        var callCount = 0;
+        using var svc = new PicDescService(
+            describeByUrl: url =>
+            {
+                callCount++;
+                return Task.FromResult("[Mock描述] 假描述，用于调试日志");
+            },
+            skipCache: true);
+
+        var result = await svc.GetOrCreatePicDescAsync("https://media.prts.wiki/existing.png");
+
+        // 描述委托被调用 → 日志流程能输出；结果来自 Mock 而非 DB 旧缓存
+        Assert.Equal(1, callCount);
+        Assert.Equal("[Mock描述] 假描述，用于调试日志", result);
+
+        // 旧缓存未被覆盖（skipCache 不写库）
+        var record = db.Queryable<PicDescription>()
+            .First(it => it.ImageUrl == "https://media.prts.wiki/existing.png");
+        Assert.Equal("来自真实 API 的旧缓存", record.PicDesc);
+    }
+
+    [Fact]
+    public async Task GetOrCreatePicDescWithFactsAsync_SkipCache_IgnoresExistingDbCache()
+    {
+        // 数据库已有按 DedupKey 缓存的记录；Mock 模式下也必须强制重新生成
+        var db = DbFactory.GetClient();
+        db.Insertable(new PicDescription
+        {
+            DedupKey = "char_debug",
+            ImageUrl = "https://media.prts.wiki/char_debug.png",
+            PicDesc = "旧缓存描述",
+            PicFacts = "旧事实",
+            Source = "Vision",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        }).ExecuteCommand();
+
+        var callCount = 0;
+        using var svc = new PicDescService(
+            describeByUrl: url =>
+            {
+                callCount++;
+                return Task.FromResult("[Mock描述] 新生成的调试描述");
+            },
+            skipCache: true);
+
+        var result = await svc.GetOrCreatePicDescWithFactsAsync(
+            "https://media.prts.wiki/char_debug.png", "char_debug");
+
+        Assert.Equal(1, callCount);
+        Assert.Equal("[Mock描述] 新生成的调试描述", result.Description);
+    }
+
+    [Fact]
     public async Task GetOrCreatePicDescAsync_NonImageUrl_ReturnsEmpty()
     {
         using var svc = new PicDescService();

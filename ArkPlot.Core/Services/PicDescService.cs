@@ -15,7 +15,8 @@ namespace ArkPlot.Core.Services;
 /// 3. 写入数据库缓存
 /// 4. 如果使用了本地临时文件，立即清理
 ///
-/// Debug 模式下强制跳过缓存，重新描述。
+/// Debug / Mock（skipCache）模式下强制跳过缓存读写，重新描述。
+/// 用于 Mock 等场景在数据库已有数据时也能触发描述流程并输出日志。
 /// </summary>
 /// <summary>
 /// 图片描述服务的返回结果，包含散文描述和结构化视觉事实。
@@ -93,7 +94,8 @@ mood: [压抑, 冷寂]
     /// <param name="describeByUrl">可选的图片描述函数，接收图片 URL 返回描述文本。为 null 时使用占位符模式。</param>
     /// <param name="extractFacts">可选的 YAML 提取函数，接收散文描述返回结构化视觉事实。为 null 时不提取。</param>
     /// <param name="debugMode">Debug 模式：强制跳过数据库缓存，重新生成描述并清理。</param>
-    /// <param name="skipCache">跳过数据库写入（用于 Mock 等不产生真实数据的场景，避免污染缓存）。</param>
+    /// <param name="skipCache">跳过数据库缓存：既无视已有缓存记录（强制重新生成，用于 Mock 等
+    /// 需要无视 DB 数据输出日志的调试场景），也不写入数据库（避免 Mock 假描述污染真实缓存）。</param>
     public PicDescService(
         Func<string, Task<string>>? describeByUrl = null,
         Func<string, Task<string>>? extractFacts = null,
@@ -166,8 +168,8 @@ mood: [压抑, 冷寂]
 
         try
         {
-            // Debug 模式：强制重新生成
-            if (_debugMode)
+            // Debug / Mock（skipCache）模式：强制重新生成，无视数据库已有缓存
+            if (_debugMode || _skipCache)
                 return await GenerateAndCacheAsync(imageUrl, dedupKey);
 
             // 第一级：DB 按 DedupKey 查（characterCode 或 URL）
