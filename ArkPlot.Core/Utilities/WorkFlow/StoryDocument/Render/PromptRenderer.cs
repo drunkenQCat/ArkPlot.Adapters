@@ -12,6 +12,9 @@ internal class PromptRenderer : IMdRenderer
     private readonly HashSet<string> _describedCharacters;
     private readonly PromptRendererConfig _config;
 
+    /// <summary>CharacterCode → 该角色在本组内出现过的所有名字（按出现顺序去重）。</summary>
+    private readonly Dictionary<string, List<string>> _codeToNames = new(StringComparer.OrdinalIgnoreCase);
+
     public string GroupSeparator => "\r\n\r\n---\r\n\r\n";
 
     public PromptRenderer(HashSet<string> describedCharacters, PromptRendererConfig? config = null)
@@ -22,6 +25,8 @@ internal class PromptRenderer : IMdRenderer
 
     public List<string> Render(EntryList grp)
     {
+        CollectCodeToNames(grp);
+
         var mdList = new List<string>();
         foreach (var entry in grp)
         {
@@ -35,6 +40,8 @@ internal class PromptRenderer : IMdRenderer
                 continue;
 
             var mdText = NormalizeText(entry);
+            mdText = NormalizeOptionLine(mdText);
+            mdText = AnnotateCrossName(entry, mdText);
 
             EmitCharacterFacts(entry, mdList);
             mdList.Add(mdText);
@@ -43,6 +50,81 @@ internal class PromptRenderer : IMdRenderer
         }
         return mdList;
     }
+
+    /// <summary>
+    /// 预扫描整组，构建 CharacterCode → 名字序列 映射。
+    /// 同一 code 在章节内可能换名（如「精英打扮的男性」→「小贾斯汀」），LLM 需据此识别为同一人。
+    /// </summary>
+    private void CollectCodeToNames(EntryList grp)
+    {
+        _codeToNames.Clear();
+        foreach (var entry in grp)
+        {
+            if (string.IsNullOrEmpty(entry.CharacterCode) || string.IsNullOrEmpty(entry.CharacterName))
+                continue;
+
+            if (!_codeToNames.TryGetValue(entry.CharacterCode, out var names))
+            {
+                names = new List<string>();
+                _codeToNames[entry.CharacterCode] = names;
+            }
+
+            if (!names.Contains(entry.CharacterName, StringComparer.Ordinal))
+                names.Add(entry.CharacterName);
+        }
+    }
+
+    /// <summary>
+    /// 对话行跨名提示：同一 CharacterCode 在本组内换名时，标注当前名的前后关系，
+    /// 让 LLM 明确前后是同一人。仅对携带 CharacterCode 且名字发生过变化的角色生效。
+    /// </summary>
+    private string AnnotateCrossName(ScriptLine entry, string mdText)
+    {
+        if (string.IsNullOrEmpty(entry.CharacterCode) || string.IsNullOrEmpty(entry.CharacterName))
+            return mdText;
+
+        if (!_codeToNames.TryGetValue(entry.CharacterCode, out var names) || names.Count <= 1)
+            return mdText;
+
+        var firstName = names[0];
+        var lastName = names[^1];
+        var marker = string.Equals(entry.CharacterName, firstName, StringComparison.Ordinal)
+            ? $"（后文作“{lastName}”）"
+            : $"（即前文“{firstName}”）";
+
+        return mdText.Replace($"**{entry.CharacterName}**", $"**{entry.CharacterName}{marker}**");
+    }
+
+    /// <summary>
+    /// 识别 `选项` 行并转换为带博士(玩家)归属的形式，消除 LLM 输入里选项无人认领的问题。
+    ///
+    /// 原始脚本中选项由一对标签构成：
+    ///   - decision：`选项候选1;候选2`  —— 博士可说的候选台词（分号分隔）
+    ///   - predicate：`选项1;2;3`      —— 分支编号行（纯数字，不含台词）
+    /// 这里按内容区分：`选项` 后紧跟纯数字/分号 → 分支注释；否则 → 博士候选台词。
+    /// </summary>
+    private static string NormalizeOptionLine(string mdText)
+    {
+        const string optionPrefix = "`选项`";
+        if (!mdText.StartsWith(optionPrefix))
+            return mdText;
+
+        var content = mdText[optionPrefix.Length..];
+        if (string.IsNullOrWhiteSpace(content))
+            return mdText;
+
+        // 纯数字/分号组成 → 分支编号行（如 `选项`1;2;3），转成注释并强调归属。
+        if (OptionIndexRegex().IsMatch(content))
+            return $"[可选分支：{content}]（此处为博士/玩家讲话）";
+
+        // 含文本 → 博士候选台词。去掉前后空白，分号分隔的多句保留。
+        return $"**博士**（玩家可选台词）：{content.Trim()}";
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex _optionIndexRegex =
+        new(@"^[0-9;；\s]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static System.Text.RegularExpressions.Regex OptionIndexRegex() => _optionIndexRegex;
 
     private static string NormalizeText(ScriptLine entry)
     {
@@ -94,8 +176,21 @@ internal class PromptRenderer : IMdRenderer
         if (!string.IsNullOrEmpty(entry.PicFacts))
         {
             mdList.Add(
-                $"<aside class=\"{_config.PortraitFactsClass}\" data-character=\"{entry.CharacterName}\">\n{entry.PicFacts}\n</aside>");
+                $"<aside class=\"{_config.PortraitFactsClass}\" data-character=\"{AnnotateAsideName(entry)}\">\n{entry.PicFacts}\n</aside>");
         }
+    }
+
+    /// <summary>
+    /// aside 的 data-character 跨名提示：同一 code 换名时，把全部名字一并列出，便于 LLM 关联立绘与正文。
+    /// </summary>
+    private string AnnotateAsideName(ScriptLine entry)
+    {
+        if (string.IsNullOrEmpty(entry.CharacterCode)
+            || !_codeToNames.TryGetValue(entry.CharacterCode, out var names)
+            || names.Count <= 1)
+            return entry.CharacterName;
+
+        return string.Join("（即同一角色）", names);
     }
 
     private void EmitSceneFacts(ScriptLine entry, List<string> mdList)

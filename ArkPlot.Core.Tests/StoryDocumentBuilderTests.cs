@@ -176,4 +176,129 @@ public class StoryDocumentBuilderTests
         var builder = new StoryDocumentBuilder(entries, enableDescriptions: false);
         Assert.NotNull(builder.Result);
     }
+
+    [Fact]
+    public void Builder_PromptMode_DecisionOption_BecomesPlayerLine()
+    {
+        var entries = new List<ScriptLine>
+        {
+            new() { Index = 0, MdText = "`选项`呼啊......;......;嘶......谁把窗帘拉开的？", Type = "decision", OriginalText = "[Decision(options=\"呼啊......;......;嘶......谁把窗帘拉开的？\")]" },
+        };
+
+        var builder = new StoryDocumentBuilder(entries, outputMode: OutputMode.PromptOptimized);
+        var result = builder.Result;
+
+        // 必须归属到博士，且不再是无主的 `选项` 标签
+        Assert.Contains("**博士**（玩家可选台词）：呼啊......;......;嘶......谁把窗帘拉开的？", result);
+        Assert.DoesNotContain("`选项`呼啊", result);
+    }
+
+    [Fact]
+    public void Builder_PromptMode_PredicateIndex_BecomesBranchComment()
+    {
+        var entries = new List<ScriptLine>
+        {
+            new() { Index = 0, MdText = "`选项`1;2;3", Type = "predicate", OriginalText = "[Predicate(references=\"1;2;3\")]" },
+        };
+
+        var builder = new StoryDocumentBuilder(entries, outputMode: OutputMode.PromptOptimized);
+        var result = builder.Result;
+
+        Assert.Contains("[可选分支：1;2;3]（此处为博士/玩家讲话）", result);
+    }
+
+    [Fact]
+    public void Builder_PromptMode_SingleDigitOption_BecomesBranchComment()
+    {
+        var entries = new List<ScriptLine>
+        {
+            new() { Index = 0, MdText = "`选项`1", Type = "predicate", OriginalText = "[Predicate(references=\"1\")]" },
+        };
+
+        var builder = new StoryDocumentBuilder(entries, outputMode: OutputMode.PromptOptimized);
+        var result = builder.Result;
+
+        Assert.Contains("[可选分支：1]（此处为博士/玩家讲话）", result);
+    }
+
+    [Fact]
+    public void Builder_PromptMode_ReadableMode_OptionUntouched()
+    {
+        // Readable 模式保持原样，不转换选项行
+        var entries = new List<ScriptLine>
+        {
+            new() { Index = 0, MdText = "`选项`呼啊......;......;嘶......谁把窗帘拉开的？", Type = "decision", OriginalText = "[Decision(options=\"HTTP\")]" },
+        };
+
+        var builder = new StoryDocumentBuilder(entries, outputMode: OutputMode.Readable);
+        var result = builder.Result;
+
+        Assert.Contains("`选项`呼啊......;......;嘶......谁把窗帘拉开的？", result);
+        Assert.DoesNotContain("**博士**（玩家可选台词）", result);
+    }
+
+    [Fact]
+    public void Builder_PromptMode_CrossName_LaterNameAnnotatesFirstName()
+    {
+        // 同一 CharacterCode 换名：首名行标「后文作」，后续名行标「即前文」
+        var entries = new List<ScriptLine>
+        {
+            MakeDialogWithCode("精英打扮的男性", "char_427", "先生，您生病了。", 0),
+            MakeDialogWithCode("小贾斯汀", "char_427", "您可以喊我小贾斯汀。", 1),
+        };
+
+        var builder = new StoryDocumentBuilder(entries, outputMode: OutputMode.PromptOptimized);
+        var result = builder.Result;
+
+        Assert.Contains("**精英打扮的男性（后文作“小贾斯汀”）**`讲道：`", result);
+        Assert.Contains("**小贾斯汀（即前文“精英打扮的男性”）**`讲道：`", result);
+    }
+
+    [Fact]
+    public void Builder_PromptMode_CrossName_AsideListsAllNames()
+    {
+        var entries = new List<ScriptLine>
+        {
+            MakeDialogWithCode("精英打扮的男性", "char_427", "先生，您生病了。", 0, picFacts: "西装革履，领口别着紫金徽章。"),
+            MakeDialogWithCode("小贾斯汀", "char_427", "您可以喊我小贾斯汀。", 1),
+        };
+
+        var builder = new StoryDocumentBuilder(entries, outputMode: OutputMode.PromptOptimized);
+        var result = builder.Result;
+
+        Assert.Contains("data-character=\"精英打扮的男性（即同一角色）小贾斯汀\"", result);
+    }
+
+    [Fact]
+    public void Builder_PromptMode_CrossName_SameNameNoAnnotation()
+    {
+        // 名字未变化 → 不加任何跨名提示
+        var entries = new List<ScriptLine>
+        {
+            MakeDialogWithCode("缪尔赛思", "char_249", "又想见你了。", 0),
+            MakeDialogWithCode("缪尔赛思", "char_249", "我来给你送早饭。", 1),
+        };
+
+        var builder = new StoryDocumentBuilder(entries, outputMode: OutputMode.PromptOptimized);
+        var result = builder.Result;
+
+        Assert.DoesNotContain("（后文作", result);
+        Assert.DoesNotContain("（即前文", result);
+    }
+
+    private static ScriptLine MakeDialogWithCode(string name, string code, string dialog, int index = 0, string picFacts = "")
+    {
+        var line = new ScriptLine
+        {
+            Index = index,
+            MdText = $"**{name}**`讲道：`{dialog}",
+            Type = "dialog",
+            CharacterName = name,
+            CharacterCode = code,
+            Dialog = dialog,
+            OriginalText = $"[name=\"{name}\"]{dialog}",
+            PicFacts = picFacts,
+        };
+        return line;
+    }
 }
