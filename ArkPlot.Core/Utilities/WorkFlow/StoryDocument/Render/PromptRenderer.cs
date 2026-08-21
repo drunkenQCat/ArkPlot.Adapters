@@ -89,10 +89,25 @@ internal class PromptRenderer : IMdRenderer
         var firstName = names[0];
         var lastName = names[^1];
         var marker = string.Equals(entry.CharacterName, firstName, StringComparison.Ordinal)
-            ? $"（后文作“{lastName}”）"
-            : $"（即前文“{firstName}”）";
+            ? $"（后文作“{StripRevealSuffix(lastName)}”）"
+            : $"（即前文“{StripRevealSuffix(firstName)}”）";
 
         return mdText.Replace($"**{entry.CharacterName}**", $"**{entry.CharacterName}{marker}**");
+    }
+
+    /// <summary>
+    /// 去掉 NormalizeDisplayNames 附加的揭示名后缀「（实际人物：X）」。
+    /// 跨名标注引用「前文名/后文名」时必须显示原始名字，
+    /// 否则「即前文'神秘人士（实际人物：可萝尔）'」会与前文名里的揭示说明形成嵌套冗余。
+    /// 注意：仅作用于标注内的引用文本；entry.CharacterName 自身与 aside 的 data-character 保持不变。
+    /// </summary>
+    private static string StripRevealSuffix(string name)
+    {
+        const string revealMarker = "（实际人物：";
+        var idx = name.IndexOf(revealMarker, StringComparison.Ordinal);
+        if (idx <= 0 || !name.EndsWith("）", StringComparison.Ordinal))
+            return name;
+        return name[..idx];
     }
 
     /// <summary>

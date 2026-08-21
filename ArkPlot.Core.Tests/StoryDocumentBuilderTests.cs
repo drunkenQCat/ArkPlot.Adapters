@@ -286,6 +286,28 @@ public class StoryDocumentBuilderTests
         Assert.DoesNotContain("（即前文", result);
     }
 
+    [Fact]
+    public void Builder_PromptMode_CrossName_StripsRevealSuffixInAnnotation()
+    {
+        // 「？？？」占位名经 NormalizeDisplayNames 加工为「神秘人士（实际人物：可萝尔）」。
+        // 跨名标注引用该名字时只能带原始显示名「神秘人士」，不能把揭示后缀拼进标注（否则嵌套）。
+        var entries = new List<ScriptLine>
+        {
+            MakeDialogWithCode("神秘人士（实际人物：可萝尔）", "char_999", "……", 0),
+            MakeDialogWithCode("可萝尔", "char_999", "你们好。", 1),
+        };
+
+        var builder = new StoryDocumentBuilder(entries, outputMode: OutputMode.PromptOptimized);
+        var result = builder.Result;
+
+        // 后文真实名行标注前文名时：只用原始显示名「神秘人士」
+        Assert.Contains("**可萝尔（即前文“神秘人士”）**", result);
+        Assert.DoesNotContain("（即前文“神秘人士（实际人物：可萝尔）”）", result);
+
+        // 前文加工名行标注后文名时：后文名本无揭示后缀，原样引用
+        Assert.Contains("**神秘人士（实际人物：可萝尔）（后文作“可萝尔”）**", result);
+    }
+
     private static ScriptLine MakeDialogWithCode(string name, string code, string dialog, int index = 0, string picFacts = "")
     {
         var line = new ScriptLine
