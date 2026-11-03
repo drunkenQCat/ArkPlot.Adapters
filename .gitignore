@@ -5,3 +5,8 @@ obj/
 .vs/
 artifacts/
 LocalizeLimbusCompany-main/
+
+# Machine-local agent settings, notes and skills are not project sources.
+.qwen/
+.reasonix/
+.zcode/
