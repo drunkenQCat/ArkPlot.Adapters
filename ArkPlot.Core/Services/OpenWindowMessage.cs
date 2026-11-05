@@ -7,6 +7,8 @@ public class OpenWindowMessage
     public int? SelectedTabIndex { get; }
     public string? ActName { get; }
     public string? TurnKey { get; }
+    public string[]? ChapterNames { get; }
+    public string? NovelPath { get; }
 
     /// <summary>发送方已解析好的故事输出目录（如复盘面板的 trace 根目录），接收方直接使用，不再自行拼接。</summary>
     public string? StoryOutputDir { get; }
@@ -17,7 +19,9 @@ public class OpenWindowMessage
         int? selectedTabIndex = null,
         string? currentActName = null,
         string? turnKey = null,
-        string? storyOutputDir = null
+        string? storyOutputDir = null,
+        string[]? chapterNames = null,
+        string? novelPath = null
     )
     {
         WindowName = windowName;
@@ -26,5 +30,7 @@ public class OpenWindowMessage
         ActName = currentActName;
         TurnKey = turnKey;
         StoryOutputDir = storyOutputDir;
+        ChapterNames = chapterNames;
+        NovelPath = novelPath;
     }
 }

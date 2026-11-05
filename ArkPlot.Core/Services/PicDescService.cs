@@ -138,6 +138,8 @@ mood: [压抑, 冷寂]
         "https://media.prts.wiki/b/bf/Avg_char_empty.png",
     };
 
+    public Action<string>? OnFailure { get; set; }
+
     public async Task<string> GetOrCreatePicDescAsync(string imageUrl, string? characterCode = null)
     {
         var result = await GetOrCreatePicDescWithFactsAsync(imageUrl, characterCode);
@@ -189,8 +191,10 @@ mood: [压抑, 冷寂]
             // 都没命中，调 API 并写入 DB
             return await GenerateAndCacheAsync(imageUrl, dedupKey);
         }
-        catch
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
         {
+            OnFailure?.Invoke(ex.Message);
             return new PicDescResult("", null); // 网络失败，不写 DB，下次重试
         }
     }
