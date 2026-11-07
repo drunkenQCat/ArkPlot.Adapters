@@ -21,7 +21,7 @@ public class NetworkUtility : INetworkClient
     {
         try
         {
-            using var client = new HttpClient();
+            using var client = GitHubHttpClientFactory.CreateClient();
             using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
             if (!response.IsSuccessStatusCode)
             {
@@ -46,7 +46,7 @@ public class NetworkUtility : INetworkClient
 
     public async Task<string> GetJsonContent(string url)
     {
-        using var client = new HttpClient();
+        using var client = GitHubHttpClientFactory.CreateClient();
         using var request = new HttpRequestMessage();
         request.RequestUri = new Uri(url);
         request.Method = HttpMethod.Get;

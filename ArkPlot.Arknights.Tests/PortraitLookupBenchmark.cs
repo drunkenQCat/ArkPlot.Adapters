@@ -239,8 +239,11 @@ public class PortraitLookupBenchmark : IDisposable
         Console.WriteLine($"B/A ratio: {swB.Elapsed.TotalMilliseconds / swA.Elapsed.TotalMilliseconds:F1}x");
         Console.WriteLine($"C/A ratio: {swC.Elapsed.TotalMilliseconds / swA.Elapsed.TotalMilliseconds:F1}x");
 
-        // 确保结果一致（不是 thorns fallback）
-        Assert.DoesNotContain("thorns", string.Join(",", resultsA));
-        Assert.True(resultsA.Count == keys.Count);
+        // The real fixture contains unknown character codes and out-of-range variants.
+        // Those legitimately use the fallback; verify valid results and cache equivalence.
+        Assert.Equal(keys.Count, resultsA.Count);
+        Assert.All(resultsA, url => Assert.True(Uri.IsWellFormedUriString(url, UriKind.Absolute)));
+        Assert.Contains(resultsA, url => !url.EndsWith("Avg_char_293_thorns_1.png", StringComparison.Ordinal));
+        Assert.Equal(resultsB, resultsC);
     }
 }

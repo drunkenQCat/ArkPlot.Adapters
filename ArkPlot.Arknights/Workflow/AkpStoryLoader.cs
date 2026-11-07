@@ -5,6 +5,7 @@ using ArkPlot.Core.Model;
 using ArkPlot.Core.Services;
 using ArkPlot.Core.Utilities;
 using ArkPlot.Core.Infrastructure;
+using ArkPlot.Core.Interfaces;
 using PreloadSet = System.Collections.Generic.HashSet<System.Collections.Generic.KeyValuePair<string, string>>;
 
 using ArkPlot.Arknights.Data;
@@ -24,19 +25,20 @@ public class AkpStoryLoader
 
     private readonly NotificationBlock notifyBlock = new();
     private readonly PrtsAssets _assets = new();
-    private readonly NetworkUtility _http = new();
+    private readonly INetworkClient _http;
     private readonly Action<string>? _onLog;
 
     /// <param name="act">当前活动</param>
     /// <param name="chapters">该活动下的章节列表</param>
     /// <param name="onLog">外部日志委托，用于将处理进度输出到 stdout 等外部通道</param>
-    public AkpStoryLoader(Act act, List<StoryChapter> chapters, Action<string>? onLog = null)
+    public AkpStoryLoader(Act act, List<StoryChapter> chapters, Action<string>? onLog = null, INetworkClient? networkClient = null)
     {
         StoryName = act.Name;
         lang = act.Lang;
         _actId = act.Id;
         _chapters = chapters;
         _onLog = onLog;
+        _http = networkClient ?? new NetworkUtility();
         ArknightsDbInitializer.Init();
     }
 
@@ -128,6 +130,16 @@ public class AkpStoryLoader
 
         var downloadedChapters = await Task.WhenAll(downloadTasks);
         ct.ThrowIfCancellationRequested();
+
+        var failedChapters = downloadedChapters
+            .Where(ch => string.IsNullOrWhiteSpace(ch.content))
+            .Select(ch => ch.title)
+            .ToList();
+        if (failedChapters.Count > 0)
+            throw new InvalidOperationException(
+                $"{failedChapters.Count} 个章节下载失败或内容为空，已停止导出，请检查网络或 GitHub 代理：{string.Join("、", failedChapters)}");
+        if (filteredChapters.Count == 0)
+            throw new InvalidOperationException("没有匹配到所选章节，已停止导出。");
 
         _onLog?.Invoke($"下载完成：{downloadedChapters.Length} 章");
 

@@ -30,7 +30,7 @@ public static class GitHubProxy
     /// </summary>
     public static string GetUrl(string originalUrl)
     {
-        if (string.IsNullOrEmpty(_prefix) || string.IsNullOrEmpty(originalUrl))
+        if (GitHubHttpClientFactory.UsesCustomProxy || string.IsNullOrEmpty(_prefix) || string.IsNullOrEmpty(originalUrl))
             return originalUrl;
         return _prefix + originalUrl;
     }

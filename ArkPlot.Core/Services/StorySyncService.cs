@@ -40,7 +40,7 @@ public class StorySyncService
         {
             try
             {
-                using var client = new HttpClient();
+                using var client = GitHubHttpClientFactory.CreateClient();
                 client.DefaultRequestHeaders.Add("User-Agent", "ArkPlot/1.0");
                 var json = await client.GetStringAsync(url);
                 var arr = JArray.Parse(json);
